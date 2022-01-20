@@ -9,4 +9,24 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="true" />
 
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnSwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_margin="32dp"
+        android:text="Switch"
+        android:textAllCaps="false" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnRecord"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="32dp"
+        android:text="Record"
+        android:textAllCaps="false" />
+
 </RelativeLayout>

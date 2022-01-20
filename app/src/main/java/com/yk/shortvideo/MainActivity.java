@@ -33,7 +33,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void initData() {
         PermissionRequester.build(this)
-                .permission(Manifest.permission.CAMERA)
+                .permission(Manifest.permission.CAMERA,
+                        Manifest.permission.RECORD_AUDIO,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                        Manifest.permission.READ_EXTERNAL_STORAGE)
                 .request(new PermissionFragment.OnPermissionRequestListener() {
                     @Override
                     public void onRequestSuccess(boolean b) {

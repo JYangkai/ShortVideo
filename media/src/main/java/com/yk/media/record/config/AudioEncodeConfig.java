@@ -13,8 +13,8 @@ public class AudioEncodeConfig {
 
     public static AudioEncodeConfig getDefault() {
         return new AudioEncodeConfig(
-                96000,
                 44100,
+                96000,
                 4096,
                 AudioFormat.CHANNEL_IN_STEREO,
                 AudioFormat.ENCODING_PCM_16BIT,

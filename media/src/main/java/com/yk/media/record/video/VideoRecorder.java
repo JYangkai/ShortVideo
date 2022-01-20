@@ -7,18 +7,17 @@ import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
+import android.media.MediaRecorder;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.view.Surface;
 
-import com.yk.media.camera.CameraSize;
 import com.yk.media.opengl.egl.GLThread;
 import com.yk.media.opengl.render.apply.RecordRender;
 import com.yk.media.record.config.AudioEncodeConfig;
-import com.yk.media.record.config.CameraConfig;
-import com.yk.media.record.config.MicConfig;
 import com.yk.media.record.config.RecordConfig;
 import com.yk.media.record.config.VideoEncodeConfig;
+import com.yk.media.record.listener.OnVideoRecordListener;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -35,42 +34,41 @@ public class VideoRecorder implements IVideoRecord {
     private Context context;
     private EGLContext eglContext;
     private int fboTextureId;
+    private boolean enableAudio;
 
-    private MicConfig micConfig;
-    private CameraConfig cameraConfig;
     private AudioEncodeConfig audioEncodeConfig;
     private VideoEncodeConfig videoEncodeConfig;
     private RecordConfig recordConfig;
 
+    private OnVideoRecordListener onVideoRecordListener;
+
     @Override
-    public void prepare(Context context, EGLContext eglContext, int fboTextureId, boolean enableAudio, int facing, CameraSize cameraSize, String path) {
-        MicConfig micConfig = MicConfig.getDefault()
-                .setEnable(enableAudio);
-
-        CameraConfig cameraConfig = CameraConfig.getDefault()
-                .setFacing(facing)
-                .setCameraSize(cameraSize);
-
+    public void prepare(Context context, EGLContext eglContext, int fboTextureId, boolean enableAudio,
+                        int width, int height, String path) {
         AudioEncodeConfig audioEncodeConfig = AudioEncodeConfig.getDefault();
 
         VideoEncodeConfig videoEncodeConfig = VideoEncodeConfig.getDefault()
-                .setWidth(cameraSize.getHeight())
-                .setHeight(cameraSize.getWidth());
+                .setWidth(width)
+                .setHeight(height);
 
         RecordConfig recordConfig = RecordConfig.getDefault()
                 .setPath(path);
 
-        prepare(context, eglContext, fboTextureId, micConfig, cameraConfig, audioEncodeConfig, videoEncodeConfig, recordConfig);
+        prepare(context, eglContext, fboTextureId, enableAudio, audioEncodeConfig, videoEncodeConfig, recordConfig);
     }
 
     @Override
-    public void prepare(Context context, EGLContext eglContext, int fboTextureId, MicConfig micConfig, CameraConfig cameraConfig, AudioEncodeConfig audioEncodeConfig, VideoEncodeConfig videoEncodeConfig, RecordConfig recordConfig) {
+    public void prepare(Context context, EGLContext eglContext, int fboTextureId, boolean enableAudio,
+                        AudioEncodeConfig audioEncodeConfig,
+                        VideoEncodeConfig videoEncodeConfig,
+                        RecordConfig recordConfig) {
+        cancelRecord();
+
         this.context = context;
         this.eglContext = eglContext;
         this.fboTextureId = fboTextureId;
+        this.enableAudio = enableAudio;
 
-        this.micConfig = micConfig;
-        this.cameraConfig = cameraConfig;
         this.audioEncodeConfig = audioEncodeConfig;
         this.videoEncodeConfig = videoEncodeConfig;
         this.recordConfig = recordConfig;
@@ -78,16 +76,14 @@ public class VideoRecorder implements IVideoRecord {
 
     @Override
     public void startRecord() {
-        cancelRecord();
-
         recordRender = new RecordRender(context);
         recordRender.setTextureId(fboTextureId);
 
         recordThread = new RecordThread(
-                micConfig, cameraConfig,
                 audioEncodeConfig, videoEncodeConfig,
                 recordConfig
         );
+        recordThread.setOnVideoRecordListener(onVideoRecordListener);
         recordThread.init();
 
         glThread = new GLThread()
@@ -98,7 +94,7 @@ public class VideoRecorder implements IVideoRecord {
                 .setWidth(videoEncodeConfig.getWidth())
                 .setHeight(videoEncodeConfig.getHeight())
                 .setRenderer(recordRender);
-        glThread.isChange = true;
+        glThread.isCreate = true;
         glThread.isChange = true;
 
         recordThread.start();
@@ -107,13 +103,13 @@ public class VideoRecorder implements IVideoRecord {
 
     @Override
     public void stopRecord() {
-        cancelRecordThread();
+        stopRecordThread();
         stopGLThread();
     }
 
     @Override
     public void cancelRecord() {
-        stopRecordThread();
+        cancelRecordThread();
         stopGLThread();
     }
 
@@ -141,6 +137,10 @@ public class VideoRecorder implements IVideoRecord {
         glThread = null;
     }
 
+    public void setOnVideoRecordListener(OnVideoRecordListener onVideoRecordListener) {
+        this.onVideoRecordListener = onVideoRecordListener;
+    }
+
     private static class RecordThread extends Thread {
         private MediaMuxer mediaMuxer;
 
@@ -149,8 +149,6 @@ public class VideoRecorder implements IVideoRecord {
 
         private MediaCodec videoCodec;
 
-        private final MicConfig micConfig;
-        private final CameraConfig cameraConfig;
         private final AudioEncodeConfig audioEncodeConfig;
         private final VideoEncodeConfig videoEncodeConfig;
         private final RecordConfig recordConfig;
@@ -162,9 +160,9 @@ public class VideoRecorder implements IVideoRecord {
         private boolean isStopRecord = false;
         private boolean isCancelRecord = false;
 
-        public RecordThread(MicConfig micConfig, CameraConfig cameraConfig, AudioEncodeConfig audioEncodeConfig, VideoEncodeConfig videoEncodeConfig, RecordConfig recordConfig) {
-            this.micConfig = micConfig;
-            this.cameraConfig = cameraConfig;
+        private OnVideoRecordListener onVideoRecordListener;
+
+        public RecordThread(AudioEncodeConfig audioEncodeConfig, VideoEncodeConfig videoEncodeConfig, RecordConfig recordConfig) {
             this.audioEncodeConfig = audioEncodeConfig;
             this.videoEncodeConfig = videoEncodeConfig;
             this.recordConfig = recordConfig;
@@ -211,7 +209,7 @@ public class VideoRecorder implements IVideoRecord {
             );
 
             audioRecord = new AudioRecord(
-                    micConfig.getSource(),
+                    MediaRecorder.AudioSource.MIC,
                     audioEncodeConfig.getSampleRate(),
                     audioEncodeConfig.getChannelConfig(),
                     audioEncodeConfig.getAudioFormat(),
@@ -273,6 +271,7 @@ public class VideoRecorder implements IVideoRecord {
 
         private void record() {
             if (mediaMuxer == null || audioCodec == null || videoCodec == null) {
+                onRecordError(new IllegalArgumentException("widget is null"));
                 return;
             }
 
@@ -289,6 +288,8 @@ public class VideoRecorder implements IVideoRecord {
             audioRecord.startRecording();
             audioCodec.start();
             videoCodec.start();
+
+            onRecordStart(audioEncodeConfig, videoEncodeConfig, recordConfig);
 
             MediaCodec.BufferInfo audioInfo = new MediaCodec.BufferInfo();
             MediaCodec.BufferInfo videoInfo = new MediaCodec.BufferInfo();
@@ -329,6 +330,7 @@ public class VideoRecorder implements IVideoRecord {
                             videoPts = videoInfo.presentationTimeUs;
                         }
                         videoInfo.presentationTimeUs = videoInfo.presentationTimeUs - videoPts;
+                        onRecording(videoInfo.presentationTimeUs);
                         mediaMuxer.writeSampleData(videoTrackIndex, outputBuffer, videoInfo);
                     }
                     videoCodec.releaseOutputBuffer(videoOutputBufferId, false);
@@ -382,10 +384,58 @@ public class VideoRecorder implements IVideoRecord {
                 mediaMuxer.release();
                 mediaMuxer = null;
             }
+
+            if (isCancelRecord) {
+                onRecordCancel();
+                return;
+            }
+
+            if (isStopRecord) {
+                onRecordStop(recordConfig);
+            }
         }
 
         public Surface getInputSurface() {
             return inputSurface;
+        }
+
+        private void onRecordStart(AudioEncodeConfig audioEncodeConfig, VideoEncodeConfig videoEncodeConfig, RecordConfig recordConfig) {
+            if (onVideoRecordListener == null) {
+                return;
+            }
+            onVideoRecordListener.onRecordStart(audioEncodeConfig, videoEncodeConfig, recordConfig);
+        }
+
+        private void onRecording(long pts) {
+            if (onVideoRecordListener == null) {
+                return;
+            }
+            onVideoRecordListener.onRecording(pts);
+        }
+
+        private void onRecordStop(RecordConfig recordConfig) {
+            if (onVideoRecordListener == null) {
+                return;
+            }
+            onVideoRecordListener.onRecordStop(recordConfig);
+        }
+
+        private void onRecordCancel() {
+            if (onVideoRecordListener == null) {
+                return;
+            }
+            onVideoRecordListener.onRecordCancel();
+        }
+
+        private void onRecordError(Exception e) {
+            if (onVideoRecordListener == null) {
+                return;
+            }
+            onVideoRecordListener.onRecordError(e);
+        }
+
+        public void setOnVideoRecordListener(OnVideoRecordListener onVideoRecordListener) {
+            this.onVideoRecordListener = onVideoRecordListener;
         }
     }
 }
