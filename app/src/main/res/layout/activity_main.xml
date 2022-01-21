@@ -16,6 +16,12 @@
             android:layout_height="wrap_content"
             android:text="相机录制" />
 
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnMicRecord"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="麦克风录制" />
+
     </LinearLayout>
 
 </androidx.core.widget.NestedScrollView>

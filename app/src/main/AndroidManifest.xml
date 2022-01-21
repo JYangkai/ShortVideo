@@ -30,6 +30,9 @@
         <activity
             android:name=".ui.record.CameraRecordActivity"
             android:theme="@style/FullTheme" />
+        <activity
+            android:name=".ui.record.MicRecordActivity"
+            android:theme="@style/FullTheme" />
     </application>
 
 </manifest>

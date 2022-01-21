@@ -11,12 +11,14 @@ import androidx.appcompat.widget.AppCompatButton;
 import com.yk.permissionrequester.PermissionFragment;
 import com.yk.permissionrequester.PermissionRequester;
 import com.yk.shortvideo.ui.record.CameraRecordActivity;
+import com.yk.shortvideo.ui.record.MicRecordActivity;
 
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private AppCompatButton btnCameraRecord;
+    private AppCompatButton btnMicRecord;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +31,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void findView() {
         btnCameraRecord = findViewById(R.id.btnCameraRecord);
+        btnMicRecord = findViewById(R.id.btnMicRecord);
     }
 
     private void initData() {
@@ -59,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void bindEvent() {
         btnCameraRecord.setOnClickListener(this);
+        btnMicRecord.setOnClickListener(this);
     }
 
     @Override
@@ -67,6 +71,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if (id == R.id.btnCameraRecord) {
             startActivity(new Intent(this, CameraRecordActivity.class));
+        } else if (id == R.id.btnMicRecord) {
+            startActivity(new Intent(this, MicRecordActivity.class));
         }
     }
 }
