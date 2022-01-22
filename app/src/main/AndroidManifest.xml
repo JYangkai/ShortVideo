@@ -33,6 +33,9 @@
         <activity
             android:name=".ui.record.MicRecordActivity"
             android:theme="@style/FullTheme" />
+        <activity
+            android:name=".ui.play.VideoPlayActivity"
+            android:theme="@style/FullTheme" />
     </application>
 
 </manifest>
