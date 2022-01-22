@@ -1,16 +1,19 @@
 package com.yk.shortvideo.ui.play;
 
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.yk.media.opengl.view.VideoView;
+import com.yk.media.play.listener.OnVideoPlayListener;
 import com.yk.shortvideo.R;
 
 import java.io.File;
 
 public class VideoPlayActivity extends AppCompatActivity {
+    private static final String TAG = "VideoPlayActivity";
 
     private VideoView videoView;
 
@@ -34,7 +37,37 @@ public class VideoPlayActivity extends AppCompatActivity {
     }
 
     private void bindEvent() {
+        videoView.addOnVideoPlayListener(new OnVideoPlayListener() {
+            @Override
+            public void onPlayStart(int width, int height, long duration) {
+                Log.d(TAG, "onPlayStart: width:" + width + " height:" + height + " duration:" + duration);
+            }
 
+            @Override
+            public void onPlayPause() {
+                Log.d(TAG, "onPlayPause: ");
+            }
+
+            @Override
+            public void onPlayContinue() {
+                Log.d(TAG, "onPlayContinue: ");
+            }
+
+            @Override
+            public void onPlayStop() {
+                Log.d(TAG, "onPlayStop: ");
+            }
+
+            @Override
+            public void onPlayComplete() {
+                Log.d(TAG, "onPlayComplete: ");
+            }
+
+            @Override
+            public void onPlayError(Exception e) {
+                Log.e(TAG, "onPlayError: ", e);
+            }
+        });
     }
 
     @Override

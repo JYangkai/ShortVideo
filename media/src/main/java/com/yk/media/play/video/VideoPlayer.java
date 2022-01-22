@@ -8,12 +8,14 @@ import android.view.SurfaceHolder;
 import com.yk.media.play.listener.OnVideoPlayListener;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class VideoPlayer implements IVideoPlay {
 
     private MediaPlayer mediaPlayer;
 
-    private OnVideoPlayListener onVideoPlayListener;
+    private final List<OnVideoPlayListener> onVideoPlayListenerList = new ArrayList<>();
 
     @Override
     public void play(String path, Object surface) {
@@ -151,48 +153,65 @@ public class VideoPlayer implements IVideoPlay {
     }
 
     private void onPlayStart(int width, int height, long duration) {
-        if (onVideoPlayListener == null) {
+        if (onVideoPlayListenerList.isEmpty()) {
             return;
         }
-        onVideoPlayListener.onPlayStart(width, height, duration);
+        for (OnVideoPlayListener onVideoPlayListener : onVideoPlayListenerList) {
+            onVideoPlayListener.onPlayStart(width, height, duration);
+        }
     }
 
     private void onPlayPause() {
-        if (onVideoPlayListener == null) {
+        if (onVideoPlayListenerList.isEmpty()) {
             return;
         }
-        onVideoPlayListener.onPlayPause();
+        for (OnVideoPlayListener onVideoPlayListener : onVideoPlayListenerList) {
+            onVideoPlayListener.onPlayPause();
+        }
     }
 
     private void onPlayContinue() {
-        if (onVideoPlayListener == null) {
+        if (onVideoPlayListenerList.isEmpty()) {
             return;
         }
-        onVideoPlayListener.onPlayContinue();
+        for (OnVideoPlayListener onVideoPlayListener : onVideoPlayListenerList) {
+            onVideoPlayListener.onPlayContinue();
+        }
     }
 
     private void onPlayStop() {
-        if (onVideoPlayListener == null) {
+        if (onVideoPlayListenerList.isEmpty()) {
             return;
         }
-        onVideoPlayListener.onPlayStop();
+        for (OnVideoPlayListener onVideoPlayListener : onVideoPlayListenerList) {
+            onVideoPlayListener.onPlayStop();
+        }
     }
 
     private void onPlayComplete() {
-        if (onVideoPlayListener == null) {
+        if (onVideoPlayListenerList.isEmpty()) {
             return;
         }
-        onVideoPlayListener.onPlayComplete();
+        for (OnVideoPlayListener onVideoPlayListener : onVideoPlayListenerList) {
+            onVideoPlayListener.onPlayComplete();
+        }
     }
 
     private void onPlayError(Exception e) {
-        if (onVideoPlayListener == null) {
+        if (onVideoPlayListenerList.isEmpty()) {
             return;
         }
-        onVideoPlayListener.onPlayError(e);
+        for (OnVideoPlayListener onVideoPlayListener : onVideoPlayListenerList) {
+            onVideoPlayListener.onPlayError(e);
+        }
+    }
+
+    public void addOnVideoPlayListener(OnVideoPlayListener onVideoPlayListener) {
+        onVideoPlayListenerList.add(onVideoPlayListener);
     }
 
     public void setOnVideoPlayListener(OnVideoPlayListener onVideoPlayListener) {
-        this.onVideoPlayListener = onVideoPlayListener;
+        onVideoPlayListenerList.clear();
+        onVideoPlayListenerList.add(onVideoPlayListener);
     }
 }

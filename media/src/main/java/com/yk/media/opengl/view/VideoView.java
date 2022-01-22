@@ -31,7 +31,7 @@ public class VideoView extends GLSurfaceView implements OnVideoPlayListener {
         setRenderer(render);
         setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
-        videoPlayer.setOnVideoPlayListener(this);
+        videoPlayer.addOnVideoPlayListener(this);
     }
 
     public void startPlay(String path) {
@@ -63,6 +63,10 @@ public class VideoView extends GLSurfaceView implements OnVideoPlayListener {
 
     public void stopPlay() {
         videoPlayer.stop();
+    }
+
+    public void addOnVideoPlayListener(OnVideoPlayListener onVideoPlayListener) {
+        videoPlayer.addOnVideoPlayListener(onVideoPlayListener);
     }
 
     @Override

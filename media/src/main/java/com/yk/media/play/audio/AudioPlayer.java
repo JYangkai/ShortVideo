@@ -6,12 +6,14 @@ import android.text.TextUtils;
 import com.yk.media.play.listener.OnAudioPlayListener;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AudioPlayer implements IAudioPlay {
 
     private MediaPlayer mediaPlayer;
 
-    private OnAudioPlayListener onAudioPlayListener;
+    private final List<OnAudioPlayListener> onAudioPlayListenerList = new ArrayList<>();
 
     @Override
     public void play(String path) {
@@ -128,48 +130,65 @@ public class AudioPlayer implements IAudioPlay {
     }
 
     private void onPlayStart(long duration) {
-        if (onAudioPlayListener == null) {
+        if (onAudioPlayListenerList.isEmpty()) {
             return;
         }
-        onAudioPlayListener.onPlayStart(duration);
+        for (OnAudioPlayListener onAudioPlayListener : onAudioPlayListenerList) {
+            onAudioPlayListener.onPlayStart(duration);
+        }
     }
 
     private void onPlayPause() {
-        if (onAudioPlayListener == null) {
+        if (onAudioPlayListenerList.isEmpty()) {
             return;
         }
-        onAudioPlayListener.onPlayPause();
+        for (OnAudioPlayListener onAudioPlayListener : onAudioPlayListenerList) {
+            onAudioPlayListener.onPlayPause();
+        }
     }
 
     private void onPlayContinue() {
-        if (onAudioPlayListener == null) {
+        if (onAudioPlayListenerList.isEmpty()) {
             return;
         }
-        onAudioPlayListener.onPlayContinue();
+        for (OnAudioPlayListener onAudioPlayListener : onAudioPlayListenerList) {
+            onAudioPlayListener.onPlayContinue();
+        }
     }
 
     private void onPlayStop() {
-        if (onAudioPlayListener == null) {
+        if (onAudioPlayListenerList.isEmpty()) {
             return;
         }
-        onAudioPlayListener.onPlayStop();
+        for (OnAudioPlayListener onAudioPlayListener : onAudioPlayListenerList) {
+            onAudioPlayListener.onPlayStop();
+        }
     }
 
     private void onPlayComplete() {
-        if (onAudioPlayListener == null) {
+        if (onAudioPlayListenerList.isEmpty()) {
             return;
         }
-        onAudioPlayListener.onPlayComplete();
+        for (OnAudioPlayListener onAudioPlayListener : onAudioPlayListenerList) {
+            onAudioPlayListener.onPlayComplete();
+        }
     }
 
     private void onPlayError(Exception e) {
-        if (onAudioPlayListener == null) {
+        if (onAudioPlayListenerList.isEmpty()) {
             return;
         }
-        onAudioPlayListener.onPlayError(e);
+        for (OnAudioPlayListener onAudioPlayListener : onAudioPlayListenerList) {
+            onAudioPlayListener.onPlayError(e);
+        }
+    }
+
+    public void addOnAudioPlayListener(OnAudioPlayListener onAudioPlayListener) {
+        onAudioPlayListenerList.add(onAudioPlayListener);
     }
 
     public void setOnAudioPlayListener(OnAudioPlayListener onAudioPlayListener) {
-        this.onAudioPlayListener = onAudioPlayListener;
+        onAudioPlayListenerList.clear();
+        onAudioPlayListenerList.add(onAudioPlayListener);
     }
 }
