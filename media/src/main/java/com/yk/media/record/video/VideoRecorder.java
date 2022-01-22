@@ -34,7 +34,6 @@ public class VideoRecorder implements IVideoRecord {
     private Context context;
     private EGLContext eglContext;
     private int fboTextureId;
-    private boolean enableAudio;
 
     private AudioEncodeConfig audioEncodeConfig;
     private VideoEncodeConfig videoEncodeConfig;
@@ -52,13 +51,14 @@ public class VideoRecorder implements IVideoRecord {
                 .setHeight(height);
 
         RecordConfig recordConfig = RecordConfig.getDefault()
-                .setPath(path);
+                .setPath(path)
+                .setEnableAudio(enableAudio);
 
-        prepare(context, eglContext, fboTextureId, enableAudio, audioEncodeConfig, videoEncodeConfig, recordConfig);
+        prepare(context, eglContext, fboTextureId, audioEncodeConfig, videoEncodeConfig, recordConfig);
     }
 
     @Override
-    public void prepare(Context context, EGLContext eglContext, int fboTextureId, boolean enableAudio,
+    public void prepare(Context context, EGLContext eglContext, int fboTextureId,
                         AudioEncodeConfig audioEncodeConfig,
                         VideoEncodeConfig videoEncodeConfig,
                         RecordConfig recordConfig) {
@@ -67,7 +67,6 @@ public class VideoRecorder implements IVideoRecord {
         this.context = context;
         this.eglContext = eglContext;
         this.fboTextureId = fboTextureId;
-        this.enableAudio = enableAudio;
 
         this.audioEncodeConfig = audioEncodeConfig;
         this.videoEncodeConfig = videoEncodeConfig;
@@ -202,6 +201,10 @@ public class VideoRecorder implements IVideoRecord {
         }
 
         private void initAudio() {
+            if (!recordConfig.isEnableAudio()) {
+                return;
+            }
+
             bufferSizeInBytes = AudioRecord.getMinBufferSize(
                     audioEncodeConfig.getSampleRate(),
                     audioEncodeConfig.getChannelConfig(),
@@ -270,8 +273,18 @@ public class VideoRecorder implements IVideoRecord {
         }
 
         private void record() {
-            if (mediaMuxer == null || audioCodec == null || videoCodec == null) {
-                onRecordError(new IllegalArgumentException("widget is null"));
+            if (mediaMuxer == null) {
+                onRecordError(new IllegalArgumentException("mediaMuxer is null"));
+                return;
+            }
+
+            if (recordConfig.isEnableAudio() && audioCodec == null) {
+                onRecordError(new IllegalArgumentException("audioCodec is null"));
+                return;
+            }
+
+            if (videoCodec == null) {
+                onRecordError(new IllegalArgumentException("videoCodec is null"));
                 return;
             }
 
@@ -285,8 +298,10 @@ public class VideoRecorder implements IVideoRecord {
             int audioTrackIndex = -1;
             int videoTrackIndex = -1;
 
-            audioRecord.startRecording();
-            audioCodec.start();
+            if (recordConfig.isEnableAudio()) {
+                audioRecord.startRecording();
+                audioCodec.start();
+            }
             videoCodec.start();
 
             onRecordStart(audioEncodeConfig, videoEncodeConfig, recordConfig);
@@ -300,16 +315,18 @@ public class VideoRecorder implements IVideoRecord {
                     break;
                 }
 
-                // 将AudioRecord录制的PCM原始数据送入编码器
-                int audioInputBufferId = audioCodec.dequeueInputBuffer(0);
-                if (audioInputBufferId >= 0) {
-                    ByteBuffer inputBuffer = audioCodec.getInputBuffer(audioInputBufferId);
-                    int readSize = -1;
-                    if (inputBuffer != null) {
-                        readSize = audioRecord.read(inputBuffer, bufferSizeInBytes);
-                    }
-                    if (readSize >= 0) {
-                        audioCodec.queueInputBuffer(audioInputBufferId, 0, readSize, System.nanoTime() / 1000, 0);
+                if (recordConfig.isEnableAudio()) {
+                    // 将AudioRecord录制的PCM原始数据送入编码器
+                    int audioInputBufferId = audioCodec.dequeueInputBuffer(0);
+                    if (audioInputBufferId >= 0) {
+                        ByteBuffer inputBuffer = audioCodec.getInputBuffer(audioInputBufferId);
+                        int readSize = -1;
+                        if (inputBuffer != null) {
+                            readSize = audioRecord.read(inputBuffer, bufferSizeInBytes);
+                        }
+                        if (readSize >= 0) {
+                            audioCodec.queueInputBuffer(audioInputBufferId, 0, readSize, System.nanoTime() / 1000, 0);
+                        }
                     }
                 }
 
@@ -317,7 +334,7 @@ public class VideoRecorder implements IVideoRecord {
                 int videoOutputBufferId = videoCodec.dequeueOutputBuffer(videoInfo, 0);
                 if (videoOutputBufferId == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                     videoTrackIndex = mediaMuxer.addTrack(videoCodec.getOutputFormat());
-                    if (audioTrackIndex != -1 && !isStartMuxer) {
+                    if (!recordConfig.isEnableAudio() || (audioTrackIndex != -1 && !isStartMuxer)) {
                         isStartMuxer = true;
                         mediaMuxer.start();
                     }
@@ -336,26 +353,28 @@ public class VideoRecorder implements IVideoRecord {
                     videoCodec.releaseOutputBuffer(videoOutputBufferId, false);
                 }
 
-                // 获取音频编码数据，写入Muxer
-                int audioOutputBufferId = audioCodec.dequeueOutputBuffer(audioInfo, 0);
-                if (audioOutputBufferId == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
-                    audioTrackIndex = mediaMuxer.addTrack(audioCodec.getOutputFormat());
-                    if (videoTrackIndex != -1 && !isStartMuxer) {
-                        isStartMuxer = true;
-                        mediaMuxer.start();
-                    }
-                } else if (audioOutputBufferId >= 0) {
-                    ByteBuffer outputBuffer = audioCodec.getOutputBuffer(audioOutputBufferId);
-                    if (outputBuffer != null && audioInfo.size != 0 && isStartMuxer) {
-                        outputBuffer.position(audioInfo.offset);
-                        outputBuffer.limit(audioInfo.offset + audioInfo.size);
-                        if (audioPts == 0) {
-                            audioPts = audioInfo.presentationTimeUs;
+                if (recordConfig.isEnableAudio()) {
+                    // 获取音频编码数据，写入Muxer
+                    int audioOutputBufferId = audioCodec.dequeueOutputBuffer(audioInfo, 0);
+                    if (audioOutputBufferId == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                        audioTrackIndex = mediaMuxer.addTrack(audioCodec.getOutputFormat());
+                        if (videoTrackIndex != -1 && !isStartMuxer) {
+                            isStartMuxer = true;
+                            mediaMuxer.start();
                         }
-                        audioInfo.presentationTimeUs = audioInfo.presentationTimeUs - audioPts;
-                        mediaMuxer.writeSampleData(audioTrackIndex, outputBuffer, audioInfo);
+                    } else if (audioOutputBufferId >= 0) {
+                        ByteBuffer outputBuffer = audioCodec.getOutputBuffer(audioOutputBufferId);
+                        if (outputBuffer != null && audioInfo.size != 0 && isStartMuxer) {
+                            outputBuffer.position(audioInfo.offset);
+                            outputBuffer.limit(audioInfo.offset + audioInfo.size);
+                            if (audioPts == 0) {
+                                audioPts = audioInfo.presentationTimeUs;
+                            }
+                            audioInfo.presentationTimeUs = audioInfo.presentationTimeUs - audioPts;
+                            mediaMuxer.writeSampleData(audioTrackIndex, outputBuffer, audioInfo);
+                        }
+                        audioCodec.releaseOutputBuffer(audioOutputBufferId, false);
                     }
-                    audioCodec.releaseOutputBuffer(audioOutputBufferId, false);
                 }
             }
         }

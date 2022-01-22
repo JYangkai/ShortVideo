@@ -13,7 +13,7 @@ public interface IVideoRecord {
     void prepare(Context context, EGLContext eglContext, int fboTextureId, boolean enableAudio,
                  int width, int height, String path);
 
-    void prepare(Context context, EGLContext eglContext, int fboTextureId, boolean enableAudio,
+    void prepare(Context context, EGLContext eglContext, int fboTextureId,
                  AudioEncodeConfig audioEncodeConfig,
                  VideoEncodeConfig videoEncodeConfig,
                  RecordConfig recordConfig);

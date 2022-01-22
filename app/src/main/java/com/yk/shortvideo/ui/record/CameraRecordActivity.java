@@ -105,7 +105,7 @@ public class CameraRecordActivity extends AppCompatActivity {
         CameraSize cameraSize = cameraView.getCameraConfig().getCameraSize();
 
         videoRecorder.prepare(
-                this, cameraView.getEglContext(), cameraView.getFboTextureId(), true,
+                this, cameraView.getEglContext(), cameraView.getFboTextureId(), false,
                 cameraSize.getHeight(), cameraSize.getWidth(), path
         );
         videoRecorder.startRecord();
