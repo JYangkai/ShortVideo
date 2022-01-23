@@ -10,6 +10,16 @@
         android:layout_centerInParent="true" />
 
     <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnBgm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_margin="32dp"
+        android:text="Bgm"
+        android:textAllCaps="false" />
+
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnSwitch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

@@ -11,7 +11,7 @@ import javax.microedition.khronos.egl.EGLContext;
 public interface IVideoRecord {
 
     void prepare(Context context, EGLContext eglContext, int fboTextureId, boolean enableAudio,
-                 int width, int height, String path);
+                 int width, int height, String path, String bgmPath);
 
     void prepare(Context context, EGLContext eglContext, int fboTextureId,
                  AudioEncodeConfig audioEncodeConfig,

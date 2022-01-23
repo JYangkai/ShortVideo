@@ -5,11 +5,13 @@ import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
+import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
 import android.media.MediaRecorder;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
+import android.text.TextUtils;
 import android.view.Surface;
 
 import com.yk.media.opengl.egl.GLThread;
@@ -43,7 +45,7 @@ public class VideoRecorder implements IVideoRecord {
 
     @Override
     public void prepare(Context context, EGLContext eglContext, int fboTextureId, boolean enableAudio,
-                        int width, int height, String path) {
+                        int width, int height, String path, String bgmPath) {
         AudioEncodeConfig audioEncodeConfig = AudioEncodeConfig.getDefault();
 
         VideoEncodeConfig videoEncodeConfig = VideoEncodeConfig.getDefault()
@@ -52,7 +54,8 @@ public class VideoRecorder implements IVideoRecord {
 
         RecordConfig recordConfig = RecordConfig.getDefault()
                 .setPath(path)
-                .setEnableAudio(enableAudio);
+                .setEnableAudio(enableAudio)
+                .setBgmPath(bgmPath);
 
         prepare(context, eglContext, fboTextureId, audioEncodeConfig, videoEncodeConfig, recordConfig);
     }
@@ -143,6 +146,9 @@ public class VideoRecorder implements IVideoRecord {
     private static class RecordThread extends Thread {
         private MediaMuxer mediaMuxer;
 
+        private MediaExtractor bgmExtractor;
+        private int bgmTrackIndex = -1;
+
         private AudioRecord audioRecord;
         private MediaCodec audioCodec;
 
@@ -187,6 +193,7 @@ public class VideoRecorder implements IVideoRecord {
 
         public void init() {
             initMuxer();
+            initBgmExtractor();
             initAudio();
             initVideo();
         }
@@ -200,8 +207,42 @@ public class VideoRecorder implements IVideoRecord {
             }
         }
 
+        private void initBgmExtractor() {
+            String bgmPath = recordConfig.getBgmPath();
+            if (TextUtils.isEmpty(bgmPath)) {
+                return;
+            }
+
+            try {
+                bgmExtractor = new MediaExtractor();
+                bgmExtractor.setDataSource(bgmPath);
+
+                int trackCount = bgmExtractor.getTrackCount();
+                for (int i = 0; i < trackCount; i++) {
+                    MediaFormat format = bgmExtractor.getTrackFormat(i);
+                    String mime = format.getString(MediaFormat.KEY_MIME);
+                    if (!TextUtils.isEmpty(mime) && mime.startsWith("audio/")) {
+                        addBgmToMuxer(format);
+                        bgmExtractor.selectTrack(i);
+                        break;
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                bgmExtractor = null;
+                bgmTrackIndex = -1;
+            }
+        }
+
+        private void addBgmToMuxer(MediaFormat mediaFormat) {
+            if (mediaMuxer == null) {
+                return;
+            }
+            bgmTrackIndex = mediaMuxer.addTrack(mediaFormat);
+        }
+
         private void initAudio() {
-            if (!recordConfig.isEnableAudio()) {
+            if (!recordAudio()) {
                 return;
             }
 
@@ -278,7 +319,7 @@ public class VideoRecorder implements IVideoRecord {
                 return;
             }
 
-            if (recordConfig.isEnableAudio() && audioCodec == null) {
+            if (recordAudio() && audioCodec == null) {
                 onRecordError(new IllegalArgumentException("audioCodec is null"));
                 return;
             }
@@ -298,7 +339,7 @@ public class VideoRecorder implements IVideoRecord {
             int audioTrackIndex = -1;
             int videoTrackIndex = -1;
 
-            if (recordConfig.isEnableAudio()) {
+            if (recordAudio()) {
                 audioRecord.startRecording();
                 audioCodec.start();
             }
@@ -311,11 +352,12 @@ public class VideoRecorder implements IVideoRecord {
 
             for (; ; ) {
                 if (isStopRecord || isCancelRecord) {
+                    writeBgmToMuxer(videoInfo.presentationTimeUs);
                     release();
                     break;
                 }
 
-                if (recordConfig.isEnableAudio()) {
+                if (recordAudio()) {
                     // 将AudioRecord录制的PCM原始数据送入编码器
                     int audioInputBufferId = audioCodec.dequeueInputBuffer(0);
                     if (audioInputBufferId >= 0) {
@@ -334,7 +376,7 @@ public class VideoRecorder implements IVideoRecord {
                 int videoOutputBufferId = videoCodec.dequeueOutputBuffer(videoInfo, 0);
                 if (videoOutputBufferId == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                     videoTrackIndex = mediaMuxer.addTrack(videoCodec.getOutputFormat());
-                    if (!recordConfig.isEnableAudio() || (audioTrackIndex != -1 && !isStartMuxer)) {
+                    if (!recordAudio() || (audioTrackIndex != -1 && !isStartMuxer)) {
                         isStartMuxer = true;
                         mediaMuxer.start();
                     }
@@ -353,7 +395,7 @@ public class VideoRecorder implements IVideoRecord {
                     videoCodec.releaseOutputBuffer(videoOutputBufferId, false);
                 }
 
-                if (recordConfig.isEnableAudio()) {
+                if (recordAudio()) {
                     // 获取音频编码数据，写入Muxer
                     int audioOutputBufferId = audioCodec.dequeueOutputBuffer(audioInfo, 0);
                     if (audioOutputBufferId == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
@@ -376,6 +418,37 @@ public class VideoRecorder implements IVideoRecord {
                         audioCodec.releaseOutputBuffer(audioOutputBufferId, false);
                     }
                 }
+            }
+        }
+
+        private void writeBgmToMuxer(long pts) {
+            if (isCancelRecord) {
+                return;
+            }
+
+            if (bgmExtractor == null) {
+                return;
+            }
+
+            if (bgmTrackIndex == -1) {
+                return;
+            }
+
+            ByteBuffer buffer = ByteBuffer.allocateDirect(500 * 1024);
+            MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
+            for (; ; ) {
+                int readSize = bgmExtractor.readSampleData(buffer, 0);
+                if (readSize <= 0) {
+                    break;
+                }
+                info.offset = 0;
+                info.size = readSize;
+                info.presentationTimeUs = bgmExtractor.getSampleTime();
+                mediaMuxer.writeSampleData(bgmTrackIndex, buffer, info);
+                if (info.presentationTimeUs >= pts) {
+                    break;
+                }
+                bgmExtractor.advance();
             }
         }
 
@@ -412,6 +485,10 @@ public class VideoRecorder implements IVideoRecord {
             if (isStopRecord) {
                 onRecordStop(recordConfig);
             }
+        }
+
+        private boolean recordAudio() {
+            return TextUtils.isEmpty(recordConfig.getBgmPath()) && recordConfig.isEnableAudio();
         }
 
         public Surface getInputSurface() {

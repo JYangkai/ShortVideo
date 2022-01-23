@@ -1,8 +1,10 @@
 package com.yk.shortvideo.ui.record;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -15,14 +17,19 @@ import com.yk.media.record.config.RecordConfig;
 import com.yk.media.record.config.VideoEncodeConfig;
 import com.yk.media.record.listener.OnVideoRecordListener;
 import com.yk.media.record.video.VideoRecorder;
+import com.yk.media.source.Audio;
 import com.yk.shortvideo.R;
+import com.yk.shortvideo.ui.source.AudioListActivity;
 
 import java.io.File;
 
 public class CameraRecordActivity extends AppCompatActivity {
     private static final String TAG = "CameraRecordActivity";
 
+    private static final int REQUEST_BGM_CODE = 1;
+
     private CameraView cameraView;
+    private AppCompatButton btnBgm;
     private AppCompatButton btnSwitch;
     private AppCompatButton btnRecord;
 
@@ -31,6 +38,8 @@ public class CameraRecordActivity extends AppCompatActivity {
     private String path;
 
     private final VideoRecorder videoRecorder = new VideoRecorder();
+
+    private Audio bgmAudio;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -43,6 +52,7 @@ public class CameraRecordActivity extends AppCompatActivity {
 
     private void findView() {
         cameraView = findViewById(R.id.cameraView);
+        btnBgm = findViewById(R.id.btnBgm);
         btnSwitch = findViewById(R.id.btnSwitch);
         btnRecord = findViewById(R.id.btnRecord);
     }
@@ -79,6 +89,13 @@ public class CameraRecordActivity extends AppCompatActivity {
             }
         });
 
+        btnBgm.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AudioListActivity.startForResult(CameraRecordActivity.this, REQUEST_BGM_CODE);
+            }
+        });
+
         btnSwitch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -105,8 +122,8 @@ public class CameraRecordActivity extends AppCompatActivity {
         CameraSize cameraSize = cameraView.getCameraConfig().getCameraSize();
 
         videoRecorder.prepare(
-                this, cameraView.getEglContext(), cameraView.getFboTextureId(), false,
-                cameraSize.getHeight(), cameraSize.getWidth(), path
+                this, cameraView.getEglContext(), cameraView.getFboTextureId(), true,
+                cameraSize.getHeight(), cameraSize.getWidth(), path, bgmAudio != null ? bgmAudio.getPath() : null
         );
         videoRecorder.startRecord();
     }
@@ -130,5 +147,14 @@ public class CameraRecordActivity extends AppCompatActivity {
         super.onPause();
         cameraView.closeCamera();
         cancelRecord();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_BGM_CODE && resultCode == RESULT_OK && data != null) {
+            bgmAudio = (Audio) data.getSerializableExtra(AudioListActivity.EXTRA_BACK_AUDIO);
+            Toast.makeText(this, "添加BGM:" + bgmAudio.getName(), Toast.LENGTH_SHORT).show();
+        }
     }
 }
