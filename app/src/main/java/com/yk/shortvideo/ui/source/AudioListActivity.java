@@ -3,6 +3,7 @@ package com.yk.shortvideo.ui.source;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -11,13 +12,20 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.yk.media.source.Audio;
 import com.yk.media.source.MediaSourceUtils;
+import com.yk.media.transcode.audio.AudioTranscoder;
+import com.yk.media.transcode.bean.DecodeResult;
+import com.yk.media.transcode.bean.EncodeResult;
+import com.yk.media.transcode.listener.OnAudioTranscodeListener;
 import com.yk.shortvideo.R;
 import com.yk.shortvideo.data.adapter.AudioAdapter;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class AudioListActivity extends AppCompatActivity {
+    private static final String TAG = "AudioListActivity";
+
     public static final String EXTRA_BACK_AUDIO = "extra_back_audio";
 
     private RecyclerView rvAudio;
@@ -52,10 +60,46 @@ public class AudioListActivity extends AppCompatActivity {
         audioAdapter.setOnAudioItemClickListener(new AudioAdapter.OnAudioItemClickListener() {
             @Override
             public void onAudioItemClick(Audio audio) {
-                Intent intent = new Intent();
-                intent.putExtra(EXTRA_BACK_AUDIO, audio);
-                setResult(RESULT_OK, intent);
-                finish();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        String inputPath = audio.getPath();
+                        String outputPath = getExternalFilesDir("transcode") + File.separator + System.currentTimeMillis() + ".aac";
+                        AudioTranscoder audioTranscoder = new AudioTranscoder();
+                        audioTranscoder.setOnAudioTranscodeListener(new OnAudioTranscodeListener() {
+                            @Override
+                            public void onAudioTranscodeStart() {
+                                Log.d(TAG, "onAudioTranscodeStart: ");
+                            }
+
+                            @Override
+                            public void onAudioTranscoding(long progress) {
+
+                            }
+
+                            @Override
+                            public void onAudioTranscodeStop(DecodeResult decodeResult, EncodeResult encodeResult) {
+                                Log.d(TAG, "onAudioTranscodeStop: " + encodeResult);
+                            }
+
+                            @Override
+                            public void onAudioTranscodeCancel() {
+                                Log.d(TAG, "onAudioTranscodeCancel: ");
+                            }
+
+                            @Override
+                            public void onAudioTranscodeError(Exception e) {
+                                Log.d(TAG, "onAudioTranscodeError: ");
+                            }
+                        });
+                        audioTranscoder.start(inputPath, outputPath);
+                    }
+                }).start();
+
+//                Intent intent = new Intent();
+//                intent.putExtra(EXTRA_BACK_AUDIO, audio);
+//                setResult(RESULT_OK, intent);
+//                finish();
             }
         });
     }

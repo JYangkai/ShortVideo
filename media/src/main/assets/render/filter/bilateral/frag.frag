@@ -28,7 +28,7 @@ void main(){
         return;
     }
 
-    float sumWeight = getWeight(0, sourceColor, sourceColor);
+    float sumWeight = getWeight(0, sourceColor.rgb, sourceColor.rgb);
 
     vec3 finalColor = sourceColor.rgb * sumWeight;
 
@@ -39,8 +39,8 @@ void main(){
         vec3 curColor1 = texture2D(uSampler, curCoordinate1).rgb;
         vec3 curColor2 = texture2D(uSampler, curCoordinate2).rgb;
 
-        float weight1 = getWeight(curColor1, sourceColor.rgb);
-        float weight2 = getWeight(curColor2, sourceColor.rgb);
+        float weight1 = getWeight(i, curColor1, sourceColor.rgb);
+        float weight2 = getWeight(i, curColor2, sourceColor.rgb);
 
         sumWeight += weight1;
         sumWeight += weight2;
