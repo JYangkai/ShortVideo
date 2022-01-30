@@ -12,7 +12,16 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/blockwatcher" />
+            <option value="$PROJECT_DIR$/eventposter" />
+            <option value="$PROJECT_DIR$/imageloader" />
+            <option value="$PROJECT_DIR$/io" />
+            <option value="$PROJECT_DIR$/markdown" />
             <option value="$PROJECT_DIR$/media" />
+            <option value="$PROJECT_DIR$/mvp" />
+            <option value="$PROJECT_DIR$/permissionrequester" />
+            <option value="$PROJECT_DIR$/rxsimpler" />
+            <option value="$PROJECT_DIR$/share" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />
