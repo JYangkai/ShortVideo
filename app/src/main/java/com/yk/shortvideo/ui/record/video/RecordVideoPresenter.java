@@ -21,7 +21,7 @@ public class RecordVideoPresenter extends BaseMvpPresenter<IRecordVideoView> {
 
     public void startRecord(EGLContext eglContext, int fboTextureId, boolean enableAudio,
                             int width, int height, String bgmPath) {
-        String path = FolderUtils.generateVideoPath(context, ".mp4");
+        String path = FolderUtils.generateVideoPathForSuffix(context, ".mp4");
 
         videoRecorder.prepare(context, eglContext, fboTextureId, enableAudio, width, height, path, bgmPath);
         videoRecorder.startRecord();

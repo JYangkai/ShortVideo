@@ -1,5 +1,6 @@
 package com.yk.shortvideo.ui.record.video;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -7,6 +8,8 @@ import android.view.View;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatButton;
 
+import com.yk.eventposter.EventPoster;
+import com.yk.eventposter.Subscribe;
 import com.yk.media.opengl.view.CameraView;
 import com.yk.media.record.config.AudioEncodeConfig;
 import com.yk.media.record.config.RecordConfig;
@@ -14,6 +17,8 @@ import com.yk.media.record.config.VideoEncodeConfig;
 import com.yk.media.record.listener.OnVideoRecordListener;
 import com.yk.mvp.BaseMvpActivity;
 import com.yk.shortvideo.R;
+import com.yk.shortvideo.data.event.UseBGMEvent;
+import com.yk.shortvideo.ui.source.AudioSourceActivity;
 
 public class RecordVideoActivity extends BaseMvpActivity<IRecordVideoView, RecordVideoPresenter> implements IRecordVideoView {
     private static final String TAG = "RecordVideoActivity";
@@ -32,6 +37,7 @@ public class RecordVideoActivity extends BaseMvpActivity<IRecordVideoView, Recor
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_record_video);
+        EventPoster.getInstance().register(this);
         findView();
         initData();
         bindEvent();
@@ -88,7 +94,7 @@ public class RecordVideoActivity extends BaseMvpActivity<IRecordVideoView, Recor
         btnBGM.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                startActivity(new Intent(RecordVideoActivity.this, AudioSourceActivity.class));
             }
         });
 
@@ -134,7 +140,21 @@ public class RecordVideoActivity extends BaseMvpActivity<IRecordVideoView, Recor
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        EventPoster.getInstance().unregister(this);
+    }
+
+    @Override
     public RecordVideoPresenter createPresenter() {
         return new RecordVideoPresenter(this);
+    }
+
+    @Subscribe(threadMode = Subscribe.Thread.CUR)
+    public void OnUseBGMEvent(UseBGMEvent event) {
+        if (event == null) {
+            return;
+        }
+        bgmPath = event.getPath();
     }
 }

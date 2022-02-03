@@ -27,7 +27,7 @@ public class FolderUtils {
         return getFolder(context, Folder.IMAGE);
     }
 
-    public static String generateAudioPath(Context context, String suffix) {
+    public static String generateAudioPathForSuffix(Context context, String suffix) {
         File folder = getAudioFolder(context);
         if (folder == null) {
             return null;
@@ -35,7 +35,7 @@ public class FolderUtils {
         return folder.getPath() + File.separator + System.currentTimeMillis() + suffix;
     }
 
-    public static String generateVideoPath(Context context, String suffix) {
+    public static String generateVideoPathForSuffix(Context context, String suffix) {
         File folder = getVideoFolder(context);
         if (folder == null) {
             return null;
@@ -43,12 +43,42 @@ public class FolderUtils {
         return folder.getPath() + File.separator + System.currentTimeMillis() + suffix;
     }
 
-    public static String generateImagePath(Context context, String suffix) {
+    public static String generateImagePathForSuffix(Context context, String suffix) {
         File folder = getImageFolder(context);
         if (folder == null) {
             return null;
         }
         return folder.getPath() + File.separator + System.currentTimeMillis() + suffix;
+    }
+
+    public static String generateAudioPathForName(Context context, String name) {
+        File folder = getAudioFolder(context);
+        if (folder == null) {
+            return null;
+        }
+        return folder.getPath() + File.separator + name;
+    }
+
+    public static String generateVideoPathForName(Context context, String name) {
+        File folder = getVideoFolder(context);
+        if (folder == null) {
+            return null;
+        }
+        return folder.getPath() + File.separator + name;
+    }
+
+    public static String generateImagePathForName(Context context, String name) {
+        File folder = getImageFolder(context);
+        if (folder == null) {
+            return null;
+        }
+        return folder.getPath() + File.separator + name;
+    }
+
+    public static String getAACName(String inputPath) {
+        int start = inputPath.lastIndexOf("/") + 1;
+        int end = inputPath.lastIndexOf(".");
+        return inputPath.substring(start, end) + ".aac";
     }
 
 }

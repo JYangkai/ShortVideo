@@ -28,6 +28,8 @@
         <activity
             android:name=".ui.record.video.RecordVideoActivity"
             android:theme="@style/FullTheme" />
+
+        <activity android:name=".ui.source.AudioSourceActivity" />
     </application>
 
 </manifest>
