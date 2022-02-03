@@ -18,6 +18,7 @@ import com.yk.media.record.listener.OnVideoRecordListener;
 import com.yk.mvp.BaseMvpActivity;
 import com.yk.shortvideo.R;
 import com.yk.shortvideo.data.event.UseBGMEvent;
+import com.yk.shortvideo.ui.play.video.VideoPlayActivity;
 import com.yk.shortvideo.ui.source.AudioSourceActivity;
 
 public class RecordVideoActivity extends BaseMvpActivity<IRecordVideoView, RecordVideoPresenter> implements IRecordVideoView {
@@ -112,6 +113,7 @@ public class RecordVideoActivity extends BaseMvpActivity<IRecordVideoView, Recor
             @Override
             public void onRecordStop(RecordConfig recordConfig) {
                 Log.d(TAG, "onRecordStop: " + recordConfig);
+                VideoPlayActivity.start(RecordVideoActivity.this, recordConfig.getPath());
             }
 
             @Override
@@ -156,5 +158,6 @@ public class RecordVideoActivity extends BaseMvpActivity<IRecordVideoView, Recor
             return;
         }
         bgmPath = event.getPath();
+        Log.d(TAG, "OnUseBGMEvent: " + bgmPath);
     }
 }

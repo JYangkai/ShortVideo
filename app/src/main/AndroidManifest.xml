@@ -30,6 +30,10 @@
             android:theme="@style/FullTheme" />
 
         <activity android:name=".ui.source.AudioSourceActivity" />
+
+        <activity
+            android:name=".ui.play.video.VideoPlayActivity"
+            android:theme="@style/FullTheme" />
     </application>
 
 </manifest>
