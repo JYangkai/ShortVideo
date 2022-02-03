@@ -6,7 +6,7 @@ import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.text.TextUtils;
 
-import com.yk.media.transcode.bean.DecodeResult;
+import com.yk.media.transcode.bean.DecodeAudioResult;
 import com.yk.media.transcode.bean.EncodeResult;
 import com.yk.media.transcode.listener.OnAudioTranscodeListener;
 
@@ -87,27 +87,27 @@ public class AudioTranscoder {
             try {
                 onAudioTranscodeStart();
 
-                DecodeResult decodeResult = decode();
-                if (decodeResult == null) {
+                DecodeAudioResult decodeAudioResult = decode();
+                if (decodeAudioResult == null) {
                     onAudioTranscodeError(new RuntimeException("decode is fail"));
                     return;
                 }
 
-                EncodeResult encodeResult = encode(decodeResult);
+                EncodeResult encodeResult = encode(decodeAudioResult);
 
                 if (isCancelTranscode) {
                     onAudioTranscodeCancel();
                     return;
                 }
 
-                onAudioTranscodeStop(decodeResult, encodeResult);
+                onAudioTranscodeStop(decodeAudioResult, encodeResult);
             } catch (IOException e) {
                 e.printStackTrace();
                 onAudioTranscodeError(e);
             }
         }
 
-        private DecodeResult decode() throws IOException {
+        private DecodeAudioResult decode() throws IOException {
             MediaExtractor extractor = new MediaExtractor();
             extractor.setDataSource(inputPath);
 
@@ -177,17 +177,17 @@ public class AudioTranscoder {
             int bitRate = format.getInteger(MediaFormat.KEY_BIT_RATE);
             int maxInputSize = format.getInteger(MediaFormat.KEY_MAX_INPUT_SIZE);
 
-            return new DecodeResult(pcmPath, sampleRate, channelCount, bitRate, maxInputSize);
+            return new DecodeAudioResult(pcmPath, sampleRate, channelCount, bitRate, maxInputSize);
         }
 
-        private EncodeResult encode(DecodeResult decodeResult) throws IOException {
+        private EncodeResult encode(DecodeAudioResult decodeAudioResult) throws IOException {
             MediaFormat format = MediaFormat.createAudioFormat(
                     MediaFormat.MIMETYPE_AUDIO_AAC,
-                    decodeResult.getSampleRate(),
-                    decodeResult.getChannelCount()
+                    decodeAudioResult.getSampleRate(),
+                    decodeAudioResult.getChannelCount()
             );
-            format.setInteger(MediaFormat.KEY_BIT_RATE, decodeResult.getBitRate());
-            format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, decodeResult.getMaxInputSize());
+            format.setInteger(MediaFormat.KEY_BIT_RATE, decodeAudioResult.getBitRate());
+            format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, decodeAudioResult.getMaxInputSize());
             format.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC);
 
             MediaCodec mediaCodec = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_AUDIO_AAC);
@@ -196,7 +196,7 @@ public class AudioTranscoder {
 
             MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
 
-            FileInputStream pcmFis = new FileInputStream(decodeResult.getPcmPath());
+            FileInputStream pcmFis = new FileInputStream(decodeAudioResult.getPcmPath());
             FileOutputStream aacFos = new FileOutputStream(outputPath);
 
             boolean isEncodeEnd = false;
@@ -237,7 +237,7 @@ public class AudioTranscoder {
             pcmFis.close();
             aacFos.close();
 
-            File file = new File(decodeResult.getPcmPath());
+            File file = new File(decodeAudioResult.getPcmPath());
             if (file.exists()) {
                 file.delete();
             }
@@ -272,11 +272,11 @@ public class AudioTranscoder {
             onAudioTranscodeListener.onAudioTranscoding(progress);
         }
 
-        private void onAudioTranscodeStop(DecodeResult decodeResult, EncodeResult encodeResult) {
+        private void onAudioTranscodeStop(DecodeAudioResult decodeAudioResult, EncodeResult encodeResult) {
             if (onAudioTranscodeListener == null) {
                 return;
             }
-            onAudioTranscodeListener.onAudioTranscodeStop(decodeResult, encodeResult);
+            onAudioTranscodeListener.onAudioTranscodeStop(decodeAudioResult, encodeResult);
         }
 
         private void onAudioTranscodeCancel() {

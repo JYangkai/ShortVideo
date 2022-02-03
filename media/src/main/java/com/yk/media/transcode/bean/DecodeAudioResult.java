@@ -1,13 +1,13 @@
 package com.yk.media.transcode.bean;
 
-public class DecodeResult {
+public class DecodeAudioResult {
     private String pcmPath;
     private int sampleRate;
     private int channelCount;
     private int bitRate;
     private int maxInputSize;
 
-    public DecodeResult(String pcmPath, int sampleRate, int channelCount, int bitRate, int maxInputSize) {
+    public DecodeAudioResult(String pcmPath, int sampleRate, int channelCount, int bitRate, int maxInputSize) {
         this.pcmPath = pcmPath;
         this.sampleRate = sampleRate;
         this.channelCount = channelCount;

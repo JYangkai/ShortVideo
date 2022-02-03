@@ -1,6 +1,6 @@
 package com.yk.media.transcode.listener;
 
-import com.yk.media.transcode.bean.DecodeResult;
+import com.yk.media.transcode.bean.DecodeAudioResult;
 import com.yk.media.transcode.bean.EncodeResult;
 
 public interface OnAudioTranscodeListener {
@@ -8,7 +8,7 @@ public interface OnAudioTranscodeListener {
 
     void onAudioTranscoding(long progress);
 
-    void onAudioTranscodeStop(DecodeResult decodeResult, EncodeResult encodeResult);
+    void onAudioTranscodeStop(DecodeAudioResult decodeAudioResult, EncodeResult encodeResult);
 
     void onAudioTranscodeCancel();
 

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.yk.media.opengl.view.CameraView
+        android:id="@+id/cameraView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnRecord"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="64dp"
+        android:text="录制" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnSwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/btnRecord"
+        android:layout_marginLeft="32dp"
+        android:layout_toRightOf="@id/btnRecord"
+        android:text="切换" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnTools"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/btnRecord"
+        android:layout_marginRight="32dp"
+        android:layout_toLeftOf="@id/btnRecord"
+        android:text="道具" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnBGM"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_margin="16dp"
+        android:text="背景音乐" />
+
+</RelativeLayout>

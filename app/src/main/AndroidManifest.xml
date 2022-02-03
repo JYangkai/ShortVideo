@@ -17,9 +17,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ShortVideo"
         tools:ignore="AllowBackup">
-        <activity
-            android:name=".MainActivity"
-            android:theme="@style/FullTheme">
+        <activity android:name=".ui.home.HomeActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -28,16 +26,7 @@
         </activity>
 
         <activity
-            android:name=".ui.record.CameraRecordActivity"
-            android:theme="@style/FullTheme" />
-        <activity
-            android:name=".ui.record.MicRecordActivity"
-            android:theme="@style/FullTheme" />
-        <activity
-            android:name=".ui.play.VideoPlayActivity"
-            android:theme="@style/FullTheme" />
-        <activity
-            android:name=".ui.source.AudioListActivity"
+            android:name=".ui.record.video.RecordVideoActivity"
             android:theme="@style/FullTheme" />
     </application>
 
