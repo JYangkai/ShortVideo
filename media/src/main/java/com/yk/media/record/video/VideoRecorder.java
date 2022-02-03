@@ -21,6 +21,7 @@ import com.yk.media.record.config.RecordConfig;
 import com.yk.media.record.config.VideoEncodeConfig;
 import com.yk.media.record.listener.OnVideoRecordListener;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -478,6 +479,10 @@ public class VideoRecorder implements IVideoRecord {
             }
 
             if (isCancelRecord) {
+                File file = new File(recordConfig.getPath());
+                if (file.exists()) {
+                    file.delete();
+                }
                 onRecordCancel();
                 return;
             }
