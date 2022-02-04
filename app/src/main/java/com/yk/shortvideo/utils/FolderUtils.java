@@ -75,10 +75,10 @@ public class FolderUtils {
         return folder.getPath() + File.separator + name;
     }
 
-    public static String getAACName(String inputPath) {
+    public static String getNameForSuffix(String inputPath, String suffix) {
         int start = inputPath.lastIndexOf("/") + 1;
         int end = inputPath.lastIndexOf(".");
-        return inputPath.substring(start, end) + ".aac";
+        return inputPath.substring(start, end) + suffix;
     }
 
 }

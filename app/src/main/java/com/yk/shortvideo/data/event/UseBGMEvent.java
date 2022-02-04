@@ -1,25 +1,27 @@
 package com.yk.shortvideo.data.event;
 
+import com.yk.shortvideo.data.bean.AudioSource;
+
 public class UseBGMEvent {
 
-    private String path;
+    private AudioSource source;
 
-    public UseBGMEvent(String path) {
-        this.path = path;
+    public UseBGMEvent(AudioSource source) {
+        this.source = source;
     }
 
-    public String getPath() {
-        return path;
+    public AudioSource getSource() {
+        return source;
     }
 
-    public void setPath(String path) {
-        this.path = path;
+    public void setSource(AudioSource source) {
+        this.source = source;
     }
 
     @Override
     public String toString() {
-        return "UserBGMEvent{" +
-                "path='" + path + '\'' +
+        return "UseBGMEvent{" +
+                "source=" + source +
                 '}';
     }
 }

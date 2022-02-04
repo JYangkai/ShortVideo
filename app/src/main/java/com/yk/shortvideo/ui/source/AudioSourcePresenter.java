@@ -96,7 +96,7 @@ public class AudioSourcePresenter extends BaseMvpPresenter<IAudioSourceView> {
 
     public void transcode(AudioSource audioSource) {
         String inputPath = audioSource.getAudio().getPath();
-        String outputPath = FolderUtils.generateAudioPathForName(context, FolderUtils.getAACName(inputPath));
+        String outputPath = FolderUtils.generateAudioPathForName(context, FolderUtils.getNameForSuffix(inputPath, ".aac"));
 
         audioTranscoder.setOnAudioTranscodeListener(new OnAudioTranscodeListener() {
             @Override
@@ -142,7 +142,13 @@ public class AudioSourcePresenter extends BaseMvpPresenter<IAudioSourceView> {
 
         for (Audio audio : audioList) {
             AudioSource audioSource = new AudioSource(audio);
-            audioSource.setState(AudioSource.State.NEED_TRANSCODE);
+            String name = audio.getName();
+            String suffix = name.substring(name.lastIndexOf("."));
+            if (suffix.equals(".aac")) {
+                audioSource.setState(AudioSource.State.CAN_USE);
+            } else {
+                audioSource.setState(AudioSource.State.NEED_TRANSCODE);
+            }
             audioSourceList.add(audioSource);
         }
 

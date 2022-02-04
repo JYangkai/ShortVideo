@@ -13,6 +13,13 @@
         android:layout_weight="1" />
 
     <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnPlay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:text="播放" />
+
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnUse"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

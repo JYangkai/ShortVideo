@@ -7,6 +7,7 @@ import android.view.View;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatButton;
+import androidx.appcompat.widget.AppCompatTextView;
 
 import com.yk.eventposter.EventPoster;
 import com.yk.eventposter.Subscribe;
@@ -29,6 +30,7 @@ public class RecordVideoActivity extends BaseMvpActivity<IRecordVideoView, Recor
     private AppCompatButton btnSwitch;
     private AppCompatButton btnTools;
     private AppCompatButton btnBGM;
+    private AppCompatTextView tvBGMName;
 
     private String bgmPath;
 
@@ -50,6 +52,7 @@ public class RecordVideoActivity extends BaseMvpActivity<IRecordVideoView, Recor
         btnSwitch = findViewById(R.id.btnSwitch);
         btnTools = findViewById(R.id.btnTools);
         btnBGM = findViewById(R.id.btnBGM);
+        tvBGMName = findViewById(R.id.tvBGMName);
     }
 
     private void initData() {
@@ -152,12 +155,13 @@ public class RecordVideoActivity extends BaseMvpActivity<IRecordVideoView, Recor
         return new RecordVideoPresenter(this);
     }
 
-    @Subscribe(threadMode = Subscribe.Thread.CUR)
+    @Subscribe(threadMode = Subscribe.Thread.UI)
     public void OnUseBGMEvent(UseBGMEvent event) {
         if (event == null) {
             return;
         }
-        bgmPath = event.getPath();
+        bgmPath = event.getSource().getAudio().getPath();
         Log.d(TAG, "OnUseBGMEvent: " + bgmPath);
+        tvBGMName.setText(event.getSource().getAudio().getName());
     }
 }

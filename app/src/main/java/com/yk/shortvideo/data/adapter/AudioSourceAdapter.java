@@ -33,6 +33,17 @@ public class AudioSourceAdapter extends RecyclerView.Adapter<AudioSourceAdapter.
         }
         View view = LayoutInflater.from(context).inflate(R.layout.item_audio_source, parent, false);
         ViewHolder holder = new ViewHolder(view);
+        holder.btnPlay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (onUseClickListener == null) {
+                    return;
+                }
+                int position = holder.getAdapterPosition();
+                AudioSource audioSource = list.get(position);
+                onUseClickListener.onPlayClick(audioSource);
+            }
+        });
         holder.btnUse.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -72,11 +83,13 @@ public class AudioSourceAdapter extends RecyclerView.Adapter<AudioSourceAdapter.
     static class ViewHolder extends RecyclerView.ViewHolder {
 
         AppCompatTextView tvName;
+        AppCompatButton btnPlay;
         AppCompatButton btnUse;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             tvName = itemView.findViewById(R.id.tvName);
+            btnPlay = itemView.findViewById(R.id.btnPlay);
             btnUse = itemView.findViewById(R.id.btnUse);
         }
     }
@@ -89,5 +102,7 @@ public class AudioSourceAdapter extends RecyclerView.Adapter<AudioSourceAdapter.
 
     public interface OnUseClickListener {
         void onUseClick(AudioSource source);
+
+        void onPlayClick(AudioSource source);
     }
 }

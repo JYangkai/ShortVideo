@@ -1,6 +1,7 @@
 package com.yk.shortvideo.ui.source;
 
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
@@ -9,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.yk.eventposter.EventPoster;
+import com.yk.media.play.audio.AudioPlayer;
 import com.yk.mvp.BaseMvpActivity;
 import com.yk.shortvideo.R;
 import com.yk.shortvideo.data.adapter.AudioSourceAdapter;
@@ -19,12 +21,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AudioSourceActivity extends BaseMvpActivity<IAudioSourceView, AudioSourcePresenter> implements IAudioSourceView {
+    private static final String TAG = "AudioSourceActivity";
 
     private Toolbar toolbar;
     private RecyclerView rvAudioSource;
 
     private final List<AudioSource> audioSourceList = new ArrayList<>();
     private AudioSourceAdapter audioSourceAdapter;
+
+    private final AudioPlayer audioPlayer = new AudioPlayer();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -59,6 +64,12 @@ public class AudioSourceActivity extends BaseMvpActivity<IAudioSourceView, Audio
                         break;
                 }
             }
+
+            @Override
+            public void onPlayClick(AudioSource source) {
+                Log.d(TAG, "onPlayClick: " + source);
+                audioPlayer.play(source.getAudio().getPath());
+            }
         });
     }
 
@@ -80,12 +91,18 @@ public class AudioSourceActivity extends BaseMvpActivity<IAudioSourceView, Audio
     }
 
     private void useBGM(AudioSource audioSource) {
-        EventPoster.getInstance().post(new UseBGMEvent(audioSource.getAudio().getPath()));
+        EventPoster.getInstance().post(new UseBGMEvent(audioSource));
         finish();
     }
 
     private void transcode(AudioSource audioSource) {
         presenter.transcode(audioSource);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        audioPlayer.stop();
     }
 
     @Override
